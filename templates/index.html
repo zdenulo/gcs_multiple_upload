@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Multiple files to Google Cloud Storage straight from browser</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        /**
+         * Posts some data to url after upload
+         * @param key Datastore Entity key (urlsafe)
+         */
+        function postUploadHandler(key) {
+            $.post('/postdownload/',
+                {
+                    key: key
+                })
+        }
+
+        /**
+         * Ajax request to Google Cloud Storage
+         * @param url: signed url returned from server
+         * @param file: file object which will be uploaded
+         * @param key: database key
+         */
+        function upload(url, file, key) {
+            $.ajax({
+                url: url,
+                type: 'PUT',
+                data: file,
+                contentType: file.type,
+                success: function () {
+                    $('#messages').append('<p>' + Date().toString() + ' : ' + file.name + ' ' + '<span id="' + key + '"' + '></span></p>');
+                    postUploadHandler(key)
+                },
+                error: function (result) {
+                    console.log(result);
+                },
+                processData: false
+            });
+        }
+
+        /**
+         * Used as callback in Ajax request (to avoid closure keeping state)
+         */
+        var uploadCallback = function (uploadedFile) {
+            return function (data) {
+                var url = data['url'];
+                var key = data['key'];
+                upload(url, uploadedFile, key);
+            }
+        };
+
+        /**
+         * After selecting files and clicking Open button uploading process is initiated automatically
+         * First request to get signed url is made and then actual upload is started
+         * @param files: selected files
+         */
+        function handleFiles(files) {
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                var filename = file.name;
+                $.getJSON("/get_signed_url/", {
+                        filename: filename,
+                        content_type: file.type
+                    },
+                    uploadCallback(file)
+                );
+            }
+        }
+
+
+    </script>
+</head>
+<body>
+
+<form action="/" method="POST" enctype="multipart/form-data">
+    Select files: <input type="file" name="files" multiple onchange="handleFiles(this.files)">
+</form>
+
+<div id="messages">
+</div>
+</body>
+</html>

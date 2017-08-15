@@ -1,0 +1,8 @@
+[
+    {
+      "origin": ["http://adventures-on-gcp.appspot.com", "http://localhost:8080"],
+      "responseHeader": ["Content-Type"],
+      "method": ["GET", "HEAD", "DELETE", "PUT", "POST"],
+      "maxAgeSeconds": 3600
+    }
+]
